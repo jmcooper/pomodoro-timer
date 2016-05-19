@@ -4,6 +4,7 @@
   "description": "A pomodoro with support for ThingM blink LED (http://www.amazon.com/ThingM-blink-USB-RGB-BLINK1MK2/dp/B014A606TO).",
   "main": "main.js",
   "scripts": {
+    "start": "./node_modules/.bin/electron .",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
