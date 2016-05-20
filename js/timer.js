@@ -87,7 +87,7 @@ function updateBlinkForBreakState() {
 function updateBlinkForPomodoroState() {
   if (!blink) return
 
-  blink.setRGB(0, 255, 0)
+  blink.setRGB(255, 0, 0)
 
   // blink.writePatternLine(200, 255, 0, 0, 0);
   // blink.writePatternLine(200, 0, 0, 0, 1);
