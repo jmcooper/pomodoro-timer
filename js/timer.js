@@ -1,3 +1,6 @@
+let Rx = require('rx')
+let pauser = new Rx.Subject()
+
 const pomodoroState = "pomodoro"
 const breakState = "break"
 const farLeft = document.getElementsByClassName('far-left')[0]
@@ -8,11 +11,14 @@ const farRight = document.getElementsByClassName('far-right')[0]
 const pauseButton = document.getElementById('pause-button')
 const tomatoImage = document.getElementsByClassName('tomato-image')[0]
 const timerLabels = document.getElementsByClassName('time-label')
+const redTomatoImageUrl = './img/pomodoro-red.png'
+const greenTomatoImageUrl = './img/pomodoro-green.png';
 
 let pomodoroLength=25
 let breakLength=5
-let state=pomodoroState
-let counter=pomodoroLength
+let paused=false
+let currentTimerPosition
+let subscriber
 
 let blink
 
@@ -23,87 +29,84 @@ try {
   console.warn('Blink is unavailable', e)
 }
 
+startPomodoro()
 
-updatePomodoroLabels()
-let interval = setInterval(() => {  counter--; updatePomodoroLabels() }, 1000)
+function startPomodoro(length=pomodoroLength) {
+  tomatoImage.src = redTomatoImageUrl
+  updateFontColors(pomodoroState)
+  updateBlinkForPomodoroState()
+
+  let pomodoroObservable = Rx.Observable.timer(0, 1000).take(length + 1)
+
+  subscriber = pomodoroObservable.subscribe(
+    i => {currentTimerPosition=i; updatePomodoroLabels(length - i)},
+    function() {},
+    startBreak
+  )
+}
+
+function startBreak(length=breakLength) {
+  tomatoImage.src = greenTomatoImageUrl
+  updateFontColors(breakState)
+  updateBlinkForBreakState()
+
+  let breakObservable = Rx.Observable.timer(0, 1000).take(length + 1)
+  subscriber = breakObservable.subscribe(
+    i => {currentTimerPosition = i; updatePomodoroLabels(length - i)},
+    function() {},
+    startPomodoro
+  )
+  pauser.onNext(true)
+}
 
 function resetTimer() {
-  counter=pomodoroLength
-  state=pomodoroState
-  updatePomodoroLabels()
+  startPomodoro()
 }
 
 function toggleTimer() {
-  if (interval) {
-    clearInterval(interval)
-    interval = null
-    pauseButton.textContent = 'RESUME'
-  }
-  else {
-    interval = setInterval(updatePomodoroLabels, 1000)
-    pauseButton.textContent = 'PAUSE'
-  }
-}
-
-function updatePomodoroLabels() {
-  farLeft.textContent = counter+2
-  left.textContent = counter+1
-  center.textContent = counter
-  right.textContent = counter-1
-  farRight.textContent = counter-2
-  if (counter === 0) {
-    if (state===pomodoroState) {
-      state=breakState
-      counter=breakLength
-    } else {
-      state=pomodoroState
-      counter=pomodoroLength
-    }
-  }
-  updateImage(state)
-  updateFontColors(state)
-  updateBlink(state, counter)
-}
-
-function updateImage(state) {
-  if (state===pomodoroState)
-    tomatoImage.src = './img/pomodoro-red.png'
+  paused = !paused
+  if (paused)
+    subscriber.dispose()
   else
-    tomatoImage.src = './img/pomodoro-green.png'
+    startPomodoro(pomodoroLength - currentTimerPosition)
+  pauseButton.textContent = paused ? 'RESUME' : 'PAUSE'
+}
+
+function updateBlinkForBreakState() {
+  if (!blink) return
+
+  blink.setRGB(0, 255, 0)
+  // blink.writePatternLine(200, 0, 255, 0, 0);
+  // blink.writePatternLine(200, 0, 0, 0, 1);
+  // blink.playLoop(0, 1, 10, () => {
+  //   blink.setRGB(255, 0, 0)
+  //   blink.fadeToRGB(pomodoroTime * 1000, 50, 255, 0)
+  // });
+}
+
+function updateBlinkForPomodoroState() {
+  if (!blink) return
+
+  blink.setRGB(0, 255, 0)
+
+  // blink.writePatternLine(200, 255, 0, 0, 0);
+  // blink.writePatternLine(200, 0, 0, 0, 1);
+  // blink.playLoop(0, 1, 10, () => {
+  //   blink.setRGB(0, 255, 0)
+  // });
+}
+
+function updatePomodoroLabels(index) {
+  farLeft.textContent = index+2
+  left.textContent = index+1
+  center.textContent = index
+  right.textContent = index-1
+  farRight.textContent = index-2
 }
 
 function updateFontColors(state) {
   let color = state===pomodoroState ? '#CDAFB0' : '#C9D2B8';
   for(let i = 0; i < timerLabels.length; i++) {
     timerLabels[i].style.color=color
-  }
-}
-
-function updateBlink(state, timerCounter) {
-  if (!blink) return
-
-  if(timerCounter === breakLength || timerCounter === pomodoroLength) {
-    if (state === pomodoroState) {
-      updateBlinkForPomodoroState();
-    } else {
-      updateBlinkForBreakState();
-    }
-  }
-
-  function updateBlinkForPomodoroState() {
-    blink.writePatternLine(200, 255, 0, 0, 0);
-    blink.writePatternLine(200, 0, 0, 0, 1);
-    blink.playLoop(0, 1, 10, () => {
-      blink.setRGB(0, 255, 0)
-    });
-  }
-
-  function updateBlinkForBreakState() {
-    blink.writePatternLine(200, 0, 255, 0, 0);
-    blink.writePatternLine(200, 0, 0, 0, 1);
-    blink.playLoop(0, 1, 10, () => {
-      blink.setRGB(255, 0, 0)
-      blink.fadeToRGB(pomodoroTime * 1000, 50, 255, 0)
-    });
   }
 }

@@ -15,6 +15,8 @@
   "author": "Jim Cooper",
   "license": "ISC",
   "dependencies": {
-    "node-blink1": "^0.2.2"
+    "electron-prebuilt": "^1.1.1",
+    "node-blink1": "^0.2.2",
+    "rx": "^4.1.0"
   }
 }
