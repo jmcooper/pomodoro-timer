@@ -36,7 +36,7 @@ function startPomodoro(length=pomodoroLength) {
   updateFontColors(pomodoroState)
   updateBlinkForPomodoroState()
 
-  let pomodoroObservable = Rx.Observable.timer(0, 1000).take(length + 1)
+  let pomodoroObservable = Rx.Observable.timer(0, 60000).take(length + 1)
 
   subscriber = pomodoroObservable.subscribe(
     i => {currentTimerPosition=i; updatePomodoroLabels(length - i)},
@@ -50,7 +50,7 @@ function startBreak(length=breakLength) {
   updateFontColors(breakState)
   updateBlinkForBreakState()
 
-  let breakObservable = Rx.Observable.timer(0, 1000).take(length + 1)
+  let breakObservable = Rx.Observable.timer(0, 60000).take(length + 1)
   subscriber = breakObservable.subscribe(
     i => {currentTimerPosition = i; updatePomodoroLabels(length - i)},
     function() {},
@@ -75,25 +75,21 @@ function toggleTimer() {
 function updateBlinkForBreakState() {
   if (!blink) return
 
-  blink.setRGB(0, 255, 0)
-  // blink.writePatternLine(200, 0, 255, 0, 0);
-  // blink.writePatternLine(200, 0, 0, 0, 1);
-  // blink.playLoop(0, 1, 10, () => {
-  //   blink.setRGB(255, 0, 0)
-  //   blink.fadeToRGB(pomodoroTime * 1000, 50, 255, 0)
-  // });
+  blink.writePatternLine(50, 0, 255, 0, 0)
+  blink.writePatternLine(50, 0, 0, 0, 1)
+  blink.writePatternLine(50, 0, 255, 0, 2)
+  blink.playLoop(0, 2, 25)
 }
 
 function updateBlinkForPomodoroState() {
   if (!blink) return
 
-  blink.setRGB(255, 0, 0)
-
-  // blink.writePatternLine(200, 255, 0, 0, 0);
-  // blink.writePatternLine(200, 0, 0, 0, 1);
-  // blink.playLoop(0, 1, 10, () => {
-  //   blink.setRGB(0, 255, 0)
-  // });
+  blink.setRGB(225, 0, 0)
+  blink.writePatternLine(50, 255, 0, 0, 0)
+  blink.writePatternLine(50, 0, 0, 0, 1)
+  blink.writePatternLine(50, 255, 0, 0, 2)
+  blink.playLoop(0, 2, 25)
+  setTimeout(() => blink.fadeToRGB(pomodoroLength * 1000, 150, 150, 0), 150*25)
 }
 
 function updatePomodoroLabels(index) {
