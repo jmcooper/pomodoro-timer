@@ -60,6 +60,7 @@ function startBreak(length=breakLength) {
 }
 
 function resetTimer() {
+  subscriber.dispose()
   startPomodoro()
 }
 
